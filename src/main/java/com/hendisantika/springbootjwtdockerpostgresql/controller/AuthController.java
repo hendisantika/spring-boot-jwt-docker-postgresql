@@ -1,6 +1,7 @@
 package com.hendisantika.springbootjwtdockerpostgresql.controller;
 
 import com.hendisantika.springbootjwtdockerpostgresql.jwt.JwtUtils;
+import com.hendisantika.springbootjwtdockerpostgresql.model.AuthToken;
 import com.hendisantika.springbootjwtdockerpostgresql.model.User;
 import com.hendisantika.springbootjwtdockerpostgresql.model.UserDetailsImpl;
 import com.hendisantika.springbootjwtdockerpostgresql.payload.request.LoginRequest;
@@ -9,9 +10,11 @@ import com.hendisantika.springbootjwtdockerpostgresql.payload.response.JwtRespon
 import com.hendisantika.springbootjwtdockerpostgresql.payload.response.MessageResponse;
 import com.hendisantika.springbootjwtdockerpostgresql.repository.UserRepository;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -118,5 +121,40 @@ public class AuthController {
                 userDetails.getId(),
                 userDetails.getPhoneNumber()
         ));
+    }
+
+    @GetMapping("/name")
+    @Operation(
+            summary = "Get name from User",
+            description = "Get name from User.",
+            tags = {"User"})
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    description = "Success",
+                    responseCode = "200",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation =
+                            User.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Bad Request", responseCode = "400",
+                    content = @Content),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Not Authorize", responseCode = "403",
+                    content = @Content),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Not found", responseCode = "404",
+                    content = @Content),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Internal error", responseCode = "500"
+                    , content = @Content)
+    })
+    @SecurityRequirement(name = "Bearer Authentication")
+    public ResponseEntity<?> getName(@Parameter @RequestHeader(name = "authorization") String authorization) {
+        AuthToken token = new AuthToken(authorization);
+
+        boolean isJWTExpired = jwtUtils.isJWTExpired(token.getDecodedJWT());
+        if (isJWTExpired) {
+            return ResponseEntity.ok(new MessageResponse("Token has been expired!"));
+        }
+
+        String phoneNumber = token.getPhoneNumber();
+        String name = token.getName();
+        return ResponseEntity.ok(new MessageResponse("Name: " + name));
     }
 }
