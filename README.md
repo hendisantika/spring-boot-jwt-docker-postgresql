@@ -4,8 +4,21 @@
 
 1. Clone this repository: `git clone https://github.com/hendisantika/spring-boot-jwt-docker-postgresql.git`
 2. Navigate to the folder: `cd spring-boot-jwt-docker-postgresql`
-3. Run the application: `mvn clean spring-boot:run`
-4. Open your favorite browser: http://localhost:8080/swagger-ui
+3. Change DB credentials with your own in `application.properties`
+4. Run the application: `./mvnw clean spring-boot:run`
+5. Open your favorite browser: http://localhost:8080/swagger-ui
+
+### Running via docker
+
+Package the application
+
+`./mvnw clean package`
+
+`docker build -t hendisantika/jwt:v3 .`
+
+```shell
+docker-compose up
+```
 
 ## Generate Public and Private Key
 
