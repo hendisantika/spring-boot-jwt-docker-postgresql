@@ -6,6 +6,8 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.hendisantika.springbootjwtdockerpostgresql.model.User;
 import com.hendisantika.springbootjwtdockerpostgresql.model.UserDetailsImpl;
 import com.hendisantika.springbootjwtdockerpostgresql.repository.UserRepository;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,10 +16,13 @@ import org.springframework.core.io.Resource;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.time.Instant;
@@ -93,5 +98,15 @@ public class JwtUtils {
 
         claims.entrySet().forEach(action -> tokenBuilder.withClaim(action.getKey(), action.getValue()));
         return tokenBuilder.sign(Algorithm.RSA256(rsaPublicKey, rsaPrivateKey));
+    }
+
+    public String generateJwtToken(Authentication authentication) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+        UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
+        return Jwts.builder()
+                .setSubject((userPrincipal.getUsername()))
+                .setIssuedAt(new Date())
+                .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
+                .signWith(SignatureAlgorithm.HS512, jwtSecret)
+                .compact();
     }
 }
