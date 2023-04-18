@@ -10,7 +10,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -66,5 +66,23 @@ class AuthControllerTest {
                 .then()
                 .statusCode(200).log().all()
                 .body("message", equalTo("User registered successfully!"));
+    }
+
+    @Test
+    @Order(2)
+    @DisplayName("Login with a right credentials")
+    public void testSuccessLogin() {
+        given()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .body("{\"phoneNumber\":\"081655242331\", \"password\":\"Password1\"}")
+                .log().all()
+                .when()
+                .post("/api/auth/signin")
+                .then()
+                .statusCode(200).log().all()
+                .body("type", equalTo("Bearer"))
+                .body("token", is(notNullValue()))
+                .body("phoneNumber", equalTo("081655242331"));
     }
 }
