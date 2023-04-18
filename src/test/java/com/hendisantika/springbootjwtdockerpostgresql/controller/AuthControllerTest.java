@@ -1,14 +1,16 @@
 package com.hendisantika.springbootjwtdockerpostgresql.controller;
 
 import io.restassured.RestAssured;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.TestMethodOrder;
+import io.restassured.http.ContentType;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.equalTo;
 
 /**
  * Created by IntelliJ IDEA.
@@ -31,5 +33,22 @@ class AuthControllerTest {
     @BeforeEach
     public void setup() {
         RestAssured.port = this.port;
+    }
+
+    @Test
+    @Order(1)
+    @DisplayName("Login with a wrong credentials")
+    public void testWrongLoginPassword() {
+        given()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .body("{\"phoneNumber\":\"123\", \"password\":\"321\"}")
+                .log().all()
+                .when()
+                .post("/api/auth/signin")
+                .then()
+                .statusCode(401).log().all()
+                .body("message", equalTo("Bad credentials"))
+                .body("status", equalTo(401));
     }
 }
