@@ -26,6 +26,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Optional;
+
 /**
  * Created by IntelliJ IDEA.
  * Project : spring-boot-jwt-docker-postgresql
@@ -156,5 +158,43 @@ public class AuthController {
         String phoneNumber = token.getPhoneNumber();
         String name = token.getName();
         return ResponseEntity.ok(new MessageResponse("Name: " + name));
+    }
+
+    @GetMapping("/update")
+    @Operation(
+            summary = "Update name of User",
+            description = "Update name of User.",
+            tags = {"User"})
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    description = "Success",
+                    responseCode = "200",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation =
+                            User.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Bad Request", responseCode = "400",
+                    content = @Content),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Not Authorize", responseCode = "403",
+                    content = @Content),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Not found", responseCode = "404",
+                    content = @Content),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Internal error", responseCode = "500"
+                    , content = @Content)
+    })
+    @SecurityRequirement(name = "Bearer Authentication")
+    public ResponseEntity<?> updateName(@Parameter @RequestHeader(name = "authorization") String authorization, @RequestParam String name) {
+        AuthToken token = new AuthToken(authorization);
+
+        boolean isJWTExpired = jwtUtils.isJWTExpired(token.getDecodedJWT());
+        if (isJWTExpired) {
+            return ResponseEntity.ok(new MessageResponse("Token has been expired!"));
+        }
+
+        String phoneNumber = token.getPhoneNumber();
+        Optional<User> byPhoneNumber = userRepository.findByPhoneNumber(phoneNumber);
+        User user = byPhoneNumber.get();
+        user.setName(name);
+        userRepository.save(user);
+        return ResponseEntity.ok(new MessageResponse("New Name has been updated successfully!"));
     }
 }
