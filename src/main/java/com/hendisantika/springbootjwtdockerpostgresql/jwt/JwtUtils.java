@@ -109,4 +109,13 @@ public class JwtUtils {
                 .signWith(SignatureAlgorithm.HS512, jwtSecret)
                 .compact();
     }
+
+    public String getPhoneNumberFromJwtToken(String token) {
+        String phoneNumber = Jwts.parser().setSigningKey(rsaPublicKey)
+                .parseClaimsJws(token)
+                .getBody().get("phoneNumber")
+                .toString();
+        log.info("===> phone number is {}", phoneNumber);
+        return phoneNumber;
+    }
 }
