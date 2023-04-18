@@ -6,8 +6,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.hendisantika.springbootjwtdockerpostgresql.model.User;
 import com.hendisantika.springbootjwtdockerpostgresql.model.UserDetailsImpl;
 import com.hendisantika.springbootjwtdockerpostgresql.repository.UserRepository;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -117,5 +116,24 @@ public class JwtUtils {
                 .toString();
         log.info("===> phone number is {}", phoneNumber);
         return phoneNumber;
+    }
+
+    public boolean validateJwtToken(String authToken) {
+        try {
+            Jwts.parser().setSigningKey(rsaPublicKey).parseClaimsJws(authToken);
+            return true;
+        } catch (SignatureException e) {
+            log.error("Invalid JWT signature: {}", e.getMessage());
+        } catch (MalformedJwtException e) {
+            log.error("Invalid JWT token: {}", e.getMessage());
+        } catch (ExpiredJwtException e) {
+            log.error("JWT token is expired: {}", e.getMessage());
+        } catch (UnsupportedJwtException e) {
+            log.error("JWT token is unsupported: {}", e.getMessage());
+        } catch (IllegalArgumentException e) {
+            log.error("JWT claims string is empty: {}", e.getMessage());
+        }
+
+        return false;
     }
 }
