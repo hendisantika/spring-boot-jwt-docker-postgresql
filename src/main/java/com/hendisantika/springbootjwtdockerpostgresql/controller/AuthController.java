@@ -2,7 +2,10 @@ package com.hendisantika.springbootjwtdockerpostgresql.controller;
 
 import com.hendisantika.springbootjwtdockerpostgresql.jwt.JwtUtils;
 import com.hendisantika.springbootjwtdockerpostgresql.model.User;
+import com.hendisantika.springbootjwtdockerpostgresql.model.UserDetailsImpl;
+import com.hendisantika.springbootjwtdockerpostgresql.payload.request.LoginRequest;
 import com.hendisantika.springbootjwtdockerpostgresql.payload.request.SignupRequest;
+import com.hendisantika.springbootjwtdockerpostgresql.payload.response.JwtResponse;
 import com.hendisantika.springbootjwtdockerpostgresql.payload.response.MessageResponse;
 import com.hendisantika.springbootjwtdockerpostgresql.repository.UserRepository;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,6 +17,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -76,5 +82,41 @@ public class AuthController {
 
         userRepository.save(user);
         return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+    }
+
+    @PostMapping("/signin")
+    @Operation(
+            summary = "User Login",
+            description = "User Login.",
+            tags = {"User"})
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    description = "Success",
+                    responseCode = "200",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation =
+                            User.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Bad Request", responseCode = "400",
+                    content = @Content),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Not Authorize", responseCode = "403",
+                    content = @Content),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Not found", responseCode = "404",
+                    content = @Content),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Internal error", responseCode = "500"
+                    , content = @Content)
+    }
+    )
+    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) throws Exception {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(loginRequest.getPhoneNumber(), loginRequest.getPassword()));
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        String jwt = jwtUtils.generateJwt(authentication);
+
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        return ResponseEntity.ok(new JwtResponse(jwt,
+                userDetails.getId(),
+                userDetails.getPhoneNumber()
+        ));
     }
 }
