@@ -51,4 +51,20 @@ class AuthControllerTest {
                 .body("message", equalTo("Bad credentials"))
                 .body("status", equalTo(401));
     }
+
+    @Test
+    @Order(2)
+    @DisplayName("Register user")
+    public void testRegister() {
+        given()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .body("{\"phoneNumber\":\"081655242331\", \"password\":\"Password1\", \"name\":\"edwin\"}")
+                .log().all()
+                .when()
+                .post("/api/auth/signup")
+                .then()
+                .statusCode(200).log().all()
+                .body("message", equalTo("User registered successfully!"));
+    }
 }
